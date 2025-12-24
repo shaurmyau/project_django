@@ -68,6 +68,20 @@ class BudgetCreateView(LoginRequiredMixin, CreateView):
     fields = ['bal', 'category', 'limit']
     success_url = reverse_lazy('budget-list')
     
+    def get_initial(self):
+        """Устанавливаем начальные значения"""
+        initial = super().get_initial()
+        # Можно установить первый баланс пользователя по умолчанию
+        user_balance = Balance.objects.filter(owner=self.request.user).first()
+        if user_balance:
+            initial['bal'] = user_balance
+        return initial
+    
+    def get_form(self, form_class=None):
+        form = super().get_form(form_class)
+        form.fields['bal'].queryset = Balance.objects.filter(owner=self.request.user)
+        return form    
+
     def form_valid(self, form):
         # Убедимся, что пользователь создает бюджет только для своего баланса
         balance = form.cleaned_data['bal']
