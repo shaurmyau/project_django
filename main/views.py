@@ -184,8 +184,8 @@ def login_view(request):
             return redirect('account')
         else:
             # Ошибка аутентификации
-            error = "Неверное имя пользователя или пароль"
-            return render(request, 'registration/login.html', {'error': error})
+            messages.error(request, 'Неправильный логин или пароль')
+            return render(request, 'registration/login.html')
     
     return render(request, 'registration/login.html')
 
