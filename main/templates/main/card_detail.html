@@ -1,0 +1,156 @@
+<!-- templates/cards/card_detail.html -->
+ {% extends 'main/base.html' %}
+<!DOCTYPE html>
+{% block content %}
+
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Карта {{ card.number }}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        .card-details {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        .sensitive-info {
+            background: linear-gradient(90deg, #f8f9fa 50%, transparent 50%);
+            background-size: 200% 100%;
+            animation: reveal 2s ease-in-out;
+            font-family: monospace;
+            font-size: 1.3rem;
+            letter-spacing: 3px;
+        }
+        @keyframes reveal {
+            0% { background-position: 200% 0; }
+            100% { background-position: 100% 0; }
+        }
+        .transaction-item {
+            border-left: 3px solid;
+            transition: all 0.3s;
+        }
+        .transaction-income { border-left-color: #28a745; }
+        .transaction-expense { border-left-color: #dc3545; }
+        .transaction-item:hover {
+            background-color: #f8f9fa;
+            transform: translateX(5px);
+        }
+    </style>
+</head>
+<body>
+    <div class="container mt-4">
+        <nav aria-label="breadcrumb" class="mb-4">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{% url 'account' %}">Мои карты</a></li>
+                <li class="breadcrumb-item active">Детали карты</li>
+            </ol>
+        </nav>
+        
+        <div class="card card-details shadow">
+            <div class="card-header bg-primary text-white">
+                <h3 class="mb-0">Детали банковской карты</h3>
+            </div>
+            
+            <div class="card-body">
+                <div class="row mb-4">
+                    <div class="col-md-6">
+                        <h5>Основная информация</h5>
+                        <table class="table table-borderless">
+                            <tr>
+                                <th width="40%">Номер карты:</th>
+                                <td class="sensitive-info">{{ card.number }}</td>
+                            </tr>
+                            <tr>
+                                <th>CVV код:</th>
+                                <td class="sensitive-info">{{ card.CVV }}</td>
+                            </tr>
+                            <tr>
+                                <th>Дата выпуска:</th>
+                                <td>{{ card.date|date:"d.m.Y" }}</td>
+                            </tr>
+                            <tr>
+                                <th>Действует до:</th>
+                                <td>{{ expiration_date|date:"d.m.Y" }}</td>
+                            </tr>
+                        </table>
+                    </div>
+                    
+                    <div class="col-md-6">
+                        <h5>Статус и баланс</h5>
+                        <table class="table table-borderless">
+                            <tr>
+                                <th width="40%">Баланс:</th>
+                                <td><span class="fs-4 fw-bold">{{ card.bal.bal }} руб.</span></td>
+                            </tr>
+                            <tr>
+                                <th>Статус:</th>
+                                <td>
+                                    {% if card_status == 'active' %}
+                                        <span class="badge bg-success fs-6">{{ status_text }}</span>
+                                    {% elif card_status == 'expiring' %}
+                                        <span class="badge bg-warning fs-6">{{ status_text }}</span>
+                                    {% else %}
+                                        <span class="badge bg-danger fs-6">{{ status_text }}</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            <tr>
+                                <th>Дней до истечения:</th>
+                                <td><span class="fw-bold">{{ days_until_expiration }}</span></td>
+                            </tr>
+                            <tr>
+                                <th>Владелец:</th>
+                                <td>{{ card.bal.owner.username }}</td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+                
+                <div class="alert alert-info">
+                    <h6 class="alert-heading">Важная информация</h6>
+                    <p class="mb-0 small">
+                        • CVV код указан на обратной стороне карты рядом с полем для подписи<br>
+                        • Не сообщайте CVV код третьим лицам<br>
+                        • Карта действительна до указанной даты включительно
+                    </p>
+                </div>
+                
+                {% if recent_transactions %}
+                <div class="mt-4">
+                    <h5>Последние транзакции</h5>
+                    <div class="list-group">
+                        {% for transaction in recent_transactions %}
+                        <div class="list-group-item transaction-item {% if transaction.dir %}transaction-income{% else %}transaction-expense{% endif %}">
+                            <div class="d-flex w-100 justify-content-between">
+                                <h6 class="mb-1">{{ transaction.category.name }}</h6>
+                                <small>{{ transaction.created_at|date:"d.m.Y H:i" }}</small>
+                            </div>
+                            <p class="mb-1">
+                                {% if transaction.dir %}
+                                    <span class="text-success">+{{ transaction.amount }} руб.</span>
+                                {% else %}
+                                    <span class="text-danger">-{{ transaction.amount }} руб.</span>
+                                {% endif %}
+                            </p>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    <div class="mt-2 text-end">
+                        <a href="{% url 'transactions' %}?card_search={{ card.number }}" class="btn btn-sm btn-outline-primary">
+                            Все транзакции по этой карте
+                        </a>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+            
+            <div class="card-footer text-center">
+                <a href="{% url 'account' %}" class="btn btn-secondary">Назад к списку карт</a>
+                <a href="{% url 'transactions' %}" class="btn btn-primary ms-2">Все транзакции</a>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
+{% endblock %}

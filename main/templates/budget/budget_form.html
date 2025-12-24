@@ -1,0 +1,167 @@
+<!-- templates/budget/budget_form.html -->
+ {% extends 'main/base.html' %}
+<!DOCTYPE html>
+{% block content %}
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% if object %}Изменить бюджет{% else %}Создать бюджет{% endif %}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        .form-container {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        .category-option {
+            padding: 8px 12px;
+            border-radius: 4px;
+            margin-bottom: 5px;
+            transition: background-color 0.2s;
+        }
+        .category-option:hover {
+            background-color: #f8f9fa;
+        }
+    </style>
+</head>
+<body>
+    <div class="container mt-4">
+        
+        <div class="card form-container shadow">
+            <div class="card-header bg-primary text-white">
+                <h3 class="mb-0">{% if object %}Изменить бюджет{% else %}Создать новый бюджет{% endif %}</h3>
+            </div>
+            
+            <div class="card-body">
+                <form method="post" novalidate>
+                    {% csrf_token %}
+                    
+                    {% if form.non_field_errors %}
+                    <div class="alert alert-danger">
+                        {% for error in form.non_field_errors %}
+                            {{ error }}
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                    
+                    <div class="mb-3">
+                        <label for="{{ form.bal.id_for_label }}" class="form-label">
+                            Счёт <span class="text-danger">*</span>
+                        </label>
+                        {{ form.bal }}
+                        {% if form.bal.errors %}
+                        <div class="alert alert-danger mt-1">
+                            {% for error in form.bal.errors %}
+                                {{ error }}
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+                        <small class="text-muted">
+                            Выберите счет, для которого устанавливается бюджет
+                        </small>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="{{ form.category.id_for_label }}" class="form-label">
+                            Категория <span class="text-danger">*</span>
+                        </label>
+                        {{ form.category }}
+                        {% if form.category.errors %}
+                        <div class="alert alert-danger mt-1">
+                            {% for error in form.category.errors %}
+                                {{ error }}
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+                        <small class="text-muted">
+                            Выберите категорию расходов для отслеживания
+                        </small>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <label for="{{ form.limit.id_for_label }}" class="form-label">
+                            Лимит на месяц (в рублях) <span class="text-danger">*</span>
+                        </label>
+                        <div class="input-group">
+                            {{ form.limit }}
+                            <span class="input-group-text">₽</span>
+                        </div>
+                        {% if form.limit.errors %}
+                        <div class="alert alert-danger mt-1">
+                            {% for error in form.limit.errors %}
+                                {{ error }}
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+                        <small class="text-muted">
+                            Максимальная сумма, которую можно потратить за месяц по этой категории
+                        </small>
+                    </div>
+                    
+                    <!-- Предварительный просмотр -->
+                    <div class="card mb-4 border-info">
+                        <div class="card-header bg-info text-white">
+                            <h6 class="mb-0">Предварительный просмотр</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <small class="text-muted">Категория:</small>
+                                    <div id="preview-category" class="fw-bold">-</div>
+                                </div>
+                                <div class="col-md-6">
+                                    <small class="text-muted">Лимит:</small>
+                                    <div id="preview-limit" class="fw-bold">-</div>
+                                </div>
+                            </div>
+                            <div class="mt-3">
+                                <small class="text-muted">Прогресс:</small>
+                                <div class="progress mt-1">
+                                    <div id="preview-progress" class="progress-bar" style="width: 0%"></div>
+                                </div>
+                                <small id="preview-text" class="text-muted">0/0 руб. (0%)</small>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="d-flex justify-content-between">
+                        <a href="{% url 'budget-list' %}" class="btn btn-secondary">
+                            Отмена
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            {% if object %}Сохранить изменения{% else %}Создать бюджет{% endif %}
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Обновление предварительного просмотра
+        function updatePreview() {
+            const categorySelect = document.getElementById('{{ form.category.id_for_label }}');
+            const limitInput = document.getElementById('{{ form.limit.id_for_label }}');
+            
+            const categoryName = categorySelect.options[categorySelect.selectedIndex]?.text || '-';
+            const limitValue = limitInput.value || 0;
+            
+            document.getElementById('preview-category').textContent = categoryName;
+            document.getElementById('preview-limit').textContent = limitValue + ' ₽';
+            document.getElementById('preview-progress').style.width = '50%';
+            document.getElementById('preview-text').textContent = `0/${limitValue} руб. (0%)`;
+        }
+        
+        // Инициализация
+        document.addEventListener('DOMContentLoaded', function() {
+            updatePreview();
+            
+            // Слушаем изменения
+            document.getElementById('{{ form.category.id_for_label }}').addEventListener('change', updatePreview);
+            document.getElementById('{{ form.limit.id_for_label }}').addEventListener('input', updatePreview);
+        });
+    </script>
+</body>
+</html>
+{% endblock %}

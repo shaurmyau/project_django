@@ -1,0 +1,214 @@
+<!-- templates/budget/budget_list.html -->
+ {% extends 'main/base.html' %}
+<!DOCTYPE html>
+{% block content %}
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Управление бюджетом</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        .progress-thin {
+            height: 8px;
+        }
+        .budget-card {
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+        .budget-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        .status-safe { border-left: 4px solid #28a745; }
+        .status-warning { border-left: 4px solid #ffc107; }
+        .status-danger { border-left: 4px solid #dc3545; }
+        .category-badge {
+            font-size: 0.9rem;
+            padding: 4px 8px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container mt-4">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1>Управление бюджетом</h1>
+            <a href="{% url 'budget-create' %}" class="btn btn-primary">
+                <i class="bi bi-plus-circle"></i> Создать бюджет
+            </a>
+        </div>
+        
+        <!-- Общая статистика -->
+        <div class="row mb-4">
+            <div class="col-md-3 mb-3">
+                <div class="card border-primary">
+                    <div class="card-body text-center">
+                        <h6 class="card-subtitle mb-2 text-muted">Общий лимит</h6>
+                        <h3 class="card-title">{{ total_limit }} ₽</h3>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3 mb-3">
+                <div class="card border-warning">
+                    <div class="card-body text-center">
+                        <h6 class="card-subtitle mb-2 text-muted">Потрачено</h6>
+                        <h3 class="card-title text-warning">{{ total_spent }} ₽</h3>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3 mb-3">
+                <div class="card border-success">
+                    <div class="card-body text-center">
+                        <h6 class="card-subtitle mb-2 text-muted">Осталось</h6>
+                        <h3 class="card-title text-success">{{ total_remaining }} ₽</h3>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3 mb-3">
+                <div class="card">
+                    <div class="card-body text-center">
+                        <h6 class="card-subtitle mb-2 text-muted">Использовано</h6>
+                        <h3 class="card-title">{{ overall_percentage|floatformat:0 }}%</h3>
+                        <div class="progress progress-thin">
+                            <div class="progress-bar 
+                                {% if overall_percentage < 70 %}bg-success
+                                {% elif overall_percentage < 90 %}bg-warning
+                                {% else %}bg-danger{% endif %}" 
+                                style="width: {{ overall_percentage }}%">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Сообщения -->
+        {% if messages %}
+        <div class="mb-4">
+            {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+        
+        <!-- Список бюджетов -->
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Мои бюджеты</h5>
+            </div>
+            
+            <div class="card-body">
+                {% if budgets %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Категория</th>
+                                    <th>Счёт</th>
+                                    <th>Лимит</th>
+                                    <th>Потрачено</th>
+                                    <th>Осталось</th>
+                                    <th>Прогресс</th>
+                                    <th>Статус</th>
+                                    <th>Действия</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for budget in budgets %}
+                                <tr class="budget-card 
+                                    {% if budget.percentage < 70 %}status-safe
+                                    {% elif budget.percentage < 90 %}status-warning
+                                    {% else %}status-danger{% endif %}">
+                                    <td>
+                                        <span class="badge category-badge" style="background-color: #{{ budget.category.id|add:100|stringformat:'06x'|slice:'0:6' }};">
+                                            {{ budget.category.name }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <small class="text-muted">{{ budget.bal.bal }} ₽</small>
+                                    </td>
+                                    <td class="fw-bold">{{ budget.limit }} ₽</td>
+                                    <td>
+                                        <span class="{% if budget.current_spent > budget.limit %}text-danger{% endif %}">
+                                            {{ budget.current_spent }} ₽
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <span class="{% if budget.remaining < 0 %}text-danger{% else %}text-success{% endif %}">
+                                            {{ budget.remaining }} ₽
+                                        </span>
+                                    </td>
+                                    <td width="150">
+                                        <div class="progress progress-thin mb-1">
+                                            <div class="progress-bar 
+                                                {% if budget.percentage < 70 %}bg-success
+                                                {% elif budget.percentage < 90 %}bg-warning
+                                                {% else %}bg-danger{% endif %}" 
+                                                style="width: {% if budget.percentage > 100 %}100{% else %}{{ budget.percentage }}{% endif %}%">
+                                            </div>
+                                        </div>
+                                        <small class="text-muted">{{ budget.percentage|floatformat:0 }}%</small>
+                                    </td>
+                                    <td>
+                                        {% if budget.percentage < 70 %}
+                                            <span class="badge bg-success">В норме</span>
+                                        {% elif budget.percentage < 90 %}
+                                            <span class="badge bg-warning">Почти превышен</span>
+                                        {% elif budget.percentage < 100 %}
+                                            <span class="badge bg-danger">Осторожно</span>
+                                        {% else %}
+                                            <span class="badge bg-dark">Превышен</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <div class="btn-group btn-group-sm">
+                                            <a href="{% url 'budget-update' budget.pk %}" class="btn btn-outline-primary">
+                                                Изменить
+                                            </a>
+                                            <a href="{% url 'budget-delete' budget.pk %}" class="btn btn-outline-danger">
+                                                Удалить
+                                            </a>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <div class="text-center py-5">
+                        <h4 class="text-muted mb-3">У вас пока нет бюджетов</h4>
+                        <p class="text-muted mb-4">Создайте бюджет, чтобы отслеживать расходы по категориям</p>
+                        <a href="{% url 'budget-create' %}" class="btn btn-primary btn-lg">
+                            Создать первый бюджет
+                        </a>
+                    </div>
+                {% endif %}
+            </div>
+            
+            {% if budgets %}
+            <div class="card-footer">
+                <div class="row">
+                    <div class="col-md-6">
+                        <small class="text-muted">
+                            <i class="bi bi-info-circle"></i>
+                            Отслеживается за текущий месяц
+                        </small>
+                    </div>
+                    <div class="col-md-6 text-end">
+                        <a href="{% url 'transactions' %}" class="btn btn-sm btn-outline-secondary">
+                            Просмотреть все транзакции
+                        </a>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
+{% endblock %}

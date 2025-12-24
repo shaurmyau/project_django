@@ -1,0 +1,240 @@
+<!-- templates/transactions/transaction_list.html -->
+{% extends 'main/base.html' %}
+<!DOCTYPE html>
+{% block content %}
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>История транзакций</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        .stats-card {
+            transition: transform 0.3s;
+        }
+        .stats-card:hover {
+            transform: translateY(-3px);
+        }
+        .transaction-row {
+            transition: background-color 0.3s;
+        }
+        .transaction-row:hover {
+            background-color: #f8f9fa;
+        }
+        .amount-income {
+            color: #28a745;
+            font-weight: bold;
+        }
+        .amount-expense {
+            color: #dc3545;
+            font-weight: bold;
+        }
+        .filter-active {
+            background-color: #e7f1ff;
+            border-color: #0d6efd;
+        }
+    </style>
+</head>
+<body>
+    <div class="container mt-4">
+        
+        <h1 class="mb-4">История транзакций</h1>
+        
+        <!-- Фильтры -->
+        <div class="card mb-4">
+            <div class="card-body">
+                <form method="get" class="row g-3">
+                    <div class="col-md-4">
+                        <label class="form-label">Период</label>
+                        <select name="date_filter" class="form-select">
+                            <option value="all" {% if date_filter == 'all' %}selected{% endif %}>Все время</option>
+                            <option value="today" {% if date_filter == 'today' %}selected{% endif %}>Сегодня</option>
+                            <option value="week" {% if date_filter == 'week' %}selected{% endif %}>За неделю</option>
+                            <option value="month" {% if date_filter == 'month' %}selected{% endif %}>За месяц</option>
+                        </select>
+                    </div>
+                    
+                    <div class="col-md-4">
+                        <label class="form-label">Тип операции</label>
+                        <select name="type_filter" class="form-select">
+                            <option value="">Все операции</option>
+                            <option value="income" {% if type_filter == 'income' %}selected{% endif %}>Доходы</option>
+                            <option value="expense" {% if type_filter == 'expense' %}selected{% endif %}>Расходы</option>
+                        </select>
+                    </div>
+                    
+                    <div class="col-md-4">
+                        <label class="form-label">Поиск по категории</label>
+                        <div class="input-group">
+                            <input type="text" name="search" class="form-control" 
+                                   placeholder="Название категории" value="{{ search_query }}">
+                        </div>
+                    </div>
+
+                    <div class="col-md-4">
+                        <label class="form-label">Поиск по номеру карты</label>
+                        <div class="input-group">
+                            <input type="text" name="card_search" class="form-control" 
+                                   placeholder="Номер карты" value="{{ card_search }}">
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Применить</button>
+                    {% if date_filter or type_filter or search_query or card_search %}
+                    <div class="col-12">
+                        <a href="{% url 'transactions' %}" class="btn btn-sm btn-outline-secondary">
+                            Сбросить фильтры
+                        </a>
+                    </div>
+                    {% endif %}
+                </form>
+            </div>
+        </div>
+        
+        <!-- Статистика -->
+        <div class="row mb-4">
+            <div class="col-md-3 mb-3">
+                <div class="card stats-card border-primary">
+                    <div class="card-body text-center">
+                        <h6 class="card-subtitle mb-2 text-muted">Всего транзакций</h6>
+                        <h3 class="card-title">{{ total_count }}</h3>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-3 mb-3">
+                <div class="card stats-card border-success">
+                    <div class="card-body text-center">
+                        <h6 class="card-subtitle mb-2 text-muted">Общий доход</h6>
+                        <h3 class="card-title amount-income">+{{ income_total }} ₽</h3>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-3 mb-3">
+                <div class="card stats-card border-danger">
+                    <div class="card-body text-center">
+                        <h6 class="card-subtitle mb-2 text-muted">Общий расход</h6>
+                        <h3 class="card-title amount-expense">-{{ expense_total }} ₽</h3>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-3 mb-3">
+                <div class="card stats-card {% if balance >= 0 %}border-success{% else %}border-danger{% endif %}">
+                    <div class="card-body text-center">
+                        <h6 class="card-subtitle mb-2 text-muted">Баланс</h6>
+                        <h3 class="card-title {% if balance >= 0 %}amount-income{% else %}amount-expense{% endif %}">
+                            {% if balance >= 0 %}+{% endif %}{{ balance }} ₽
+                        </h3>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Таблица транзакций -->
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Список транзакций</h5>
+            </div>
+            
+            <div class="card-body p-0">
+                {% if transactions %}
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Номер карты</th>
+                                    <th>Дата</th>
+                                    <th>Категория</th>
+                                    <th>Тип</th>
+                                    <th class="text-end">Сумма</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for transaction in transactions %}
+                                <tr class="transaction-row">
+                                    <td>{{ transaction.transaction_id }}</td>
+                                    <td>{{ transaction.card_number }}</td>
+                                    <td>{{ transaction.created_at|date:"d.m.Y H:i" }}</td>
+                                    <td>
+                                        {% if transaction.category_name %}
+                                            {{ transaction.category_name }}
+                                        {% else %}
+                                            <span class="text-muted">Не указана</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if transaction.amount_direction == True %}
+                                            <span class="badge bg-success">Доход</span>
+                                        {% else %}
+                                            <span class="badge bg-danger">Расход</span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="text-end">
+                                        {% if transaction.amount_direction == True %}
+                                            <span class="amount-income">+{{ transaction.amount }} ₽</span>
+                                        {% else %}
+                                            <span class="amount-expense">-{{ transaction.amount }} ₽</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <!-- Пагинация -->
+                    {% if is_paginated %}
+                    <div class="card-footer">
+                        <nav aria-label="Навигация по страницам">
+                            <ul class="pagination justify-content-center mb-0">
+                                {% if page_obj.has_previous %}
+                                    <li class="page-item">
+                                        <a class="page-link" href="?page=1{% if date_filter %}&date_filter={{ date_filter }}{% endif %}{% if type_filter %}&type_filter={{ type_filter }}{% endif %}{% if search_query %}&search={{ search_query }}{% endif %}">Первая</a>
+                                    </li>
+                                    <li class="page-item">
+                                        <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if date_filter %}&date_filter={{ date_filter }}{% endif %}{% if type_filter %}&type_filter={{ type_filter }}{% endif %}{% if search_query %}&search={{ search_query }}{% endif %}">Назад</a>
+                                    </li>
+                                {% endif %}
+                                
+                                <li class="page-item disabled">
+                                    <span class="page-link">
+                                        Страница {{ page_obj.number }} из {{ page_obj.paginator.num_pages }}
+                                    </span>
+                                </li>
+                                
+                                {% if page_obj.has_next %}
+                                    <li class="page-item">
+                                        <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if date_filter %}&date_filter={{ date_filter }}{% endif %}{% if type_filter %}&type_filter={{ type_filter }}{% endif %}{% if search_query %}&search={{ search_query }}{% endif %}">Вперед</a>
+                                    </li>
+                                    <li class="page-item">
+                                        <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if date_filter %}&date_filter={{ date_filter }}{% endif %}{% if type_filter %}&type_filter={{ type_filter }}{% endif %}{% if search_query %}&search={{ search_query }}{% endif %}">Последняя</a>
+                                    </li>
+                                {% endif %}
+                            </ul>
+                        </nav>
+                    </div>
+                    {% endif %}
+                    
+                {% else %}
+                    <div class="text-center py-5">
+                        <h4 class="text-muted">Транзакции не найдены</h4>
+                        <p class="text-muted">Попробуйте изменить параметры фильтрации</p>
+                        <a href="{% url 'transactions' %}" class="btn btn-primary">
+                            Показать все транзакции
+                        </a>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+        
+        <div class="mt-4 text-center">
+            <a href="{% url 'account' %}" class="btn btn-secondary">
+                Назад к картам
+            </a>
+        </div>
+    </div>
+</body>
+</html>
+{% endblock %}
