@@ -31,8 +31,7 @@ Finance Tracker - это веб-приложение для управления
 
 ### 1. Клонирование репозитория
 ```bash
-git clone <ваш-репозиторий>
-cd finance-tracker
+git clone https://github.com/shaurmyau/project_django.git
 ```
 
 ### 2. Создание виртуального окружения
