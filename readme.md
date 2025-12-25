@@ -101,12 +101,7 @@ GRANT CONNECT ON DATABASE project_2 TO django_user;
 
 ### Шаг 5: Настройка проекта
 
-1. Проверьте настройки в `settings.py`:
-   - Убедитесь, что `DEBUG = True` для разработки
-   - Проверьте настройки базы данных
-   - Убедитесь, что `ALLOWED_HOSTS` содержит нужные домены
-
-2. Примените миграции:
+Примените миграции:
 ```bash
 python manage.py makemigrations
 python manage.py migrate
