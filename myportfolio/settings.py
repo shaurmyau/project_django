@@ -51,6 +51,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'pgtrigger',
     'simple_history',
+    'django_extensions',
 ]
 
 LOGIN_REDIRECT_URL = '/profile/'
@@ -66,6 +67,7 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'simple_history.middleware.HistoryRequestMiddleware',
+    'main.database_middleware.DatabaseUserMiddleware',
 ]
 
 ROOT_URLCONF = 'myportfolio.urls'
@@ -95,13 +97,12 @@ DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
         'NAME': 'project_2',
-        'USER': 'zahar',
+        'USER': 'django_admin',
         'PASSWORD': '2585',
         'HOST': 'localhost',
         'PORT': '5432',
     }
 }
-
 
 # Password validation
 # https://docs.djangoproject.com/en/5.2/ref/settings/#auth-password-validators

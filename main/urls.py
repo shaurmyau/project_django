@@ -5,7 +5,6 @@ from .views import CardDetailView
 urlpatterns = [
     path('', views.home, name='home'),
     path('account/', views.CardListView.as_view(), name='account'),
-    path('account/budget/', views.budget, name='budget'),
     path('account/stats/', views.TransactionListView.as_view(), name='transactions'),
     path('account/card-<int:pk>/', CardDetailView.as_view(), name = 'card_detail'),
     path('account/balance-<int:pk>/', views.BalanceDetailView.as_view(), name = 'balance_detail'),
