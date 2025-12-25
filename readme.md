@@ -1,113 +1,171 @@
-Инструкция для Mac/Linux:
-# Finance Tracker - Система управления финансами
+# Personal Finance Manager
 
-Finance Tracker - это веб-приложение для управления личными финансами, разработанное на Django. Система позволяет пользователям отслеживать свои банковские карты, балансы, транзакции и бюджеты в реальном времени. Приложение включает автоматическое обновление балансов через триггеры базы данных, историю изменений всех операций и визуализацию статистики расходов.
+Веб-приложение для управления личными финансами, разработанное на Django. Позволяет пользователям отслеживать банковские карты, транзакции, устанавливать бюджетные ограничения и анализировать финансовую статистику. Система включает в себя расширенные функции безопасности, историю изменений и триггеры на уровне базы данных.
 
 ## Features
 
-- **Управление банковскими картами**: Создание виртуальных карт с автоматической генерацией номеров и CVV-кодов
-- **Балансы и транзакции**: Отслеживание остатков на счетах и всех финансовых операций
-- **Автоматические триггеры**: Реализация бизнес-логики на уровне БД для гарантии целостности данных
-- **Система бюджетирования**: Установка лимитов расходов по категориям с отслеживанием прогресса
-- **История изменений**: Ведение полной истории всех изменений через django-simple-history
-- **Статистика и аналитика**: Просмотр детальной статистики по транзакциям через материализованные представления
-- **Новостная лента**: Публикация и управление финансовыми новостями
-- **Безопасность**: Аутентификация пользователей и проверка прав доступа ко всем операциям
-- **Адаптивный интерфейс**: Удобный веб-интерфейс для управления финансами
+- **Управление банковскими картами**: Автоматическая генерация номеров карт, CVV кодов и отслеживание сроков действия
+- **Транзакции**: Учет доходов и расходов с автоматическим обновлением баланса через триггеры PostgreSQL
+- **Контроль бюджета**: Установка месячных лимитов по категориям расходов с визуализацией прогресса
+- **Статистика**: Просмотр детальной статистики транзакций с фильтрацией по датам, категориям и типам операций
+- **История изменений**: Отслеживание всех изменений в моделях через django-simple-history
+- **Безопасность**: Middleware для автоматического переключения пользователей базы данных в зависимости от ролей
+- **Новостная лента**: Публикация и просмотр финансовых новостей
+- **Панель администратора**: Расширенный административный интерфейс Django
 
 ## Tech Stack
 
-- **Backend**: Python 3.11+, Django 4.2+
-- **Database**: PostgreSQL 14+ (с поддержкой триггеров и представлений)
+- **Backend**: Python 3.8+, Django 5.2
+- **Database**: PostgreSQL 13+ с триггерами и представлениями
+- **Database ORM**: Django ORM
+- **Security**: Django authentication, role-based database access
+- **History Tracking**: django-simple-history
+- **Database Triggers**: django-pgtrigger
+- **Development Tools**: django-extensions
 - **Frontend**: HTML5, CSS3, JavaScript, Bootstrap 5
-- **Основные библиотеки**:
-  - django-simple-history - история изменений моделей
-  - django-pgtrigger - создание триггеров PostgreSQL
-  - Pillow - работа с изображениями
-- **Аутентификация**: Django Authentication System
-- **Разработка**: Git, virtualenv, pip
+- **Templates**: Django Template Language
 
 ## Installation
 
-### 1. Клонирование репозитория
+### Предварительные требования
+
+1. **Python 3.8 или выше**
+   ```bash
+   python --version
+   ```
+
+2. **PostgreSQL 13 или выше**
+   ```bash
+   psql --version
+   ```
+
+3. **Git**
+   ```bash
+   git --version
+   ```
+
+### Шаг 1: Клонирование репозитория
+
 ```bash
 git clone https://github.com/shaurmyau/project_django.git
+cd myportfolio
 ```
 
-### 2. Создание виртуального окружения
+### Шаг 2: Создание виртуального окружения
+
 ```bash
+# Для Linux/Mac
 python -m venv venv
-
-# Для Windows:
-venv\Scripts\activate
-
-# Для Linux/Mac:
 source venv/bin/activate
+
+# Для Windows
+python -m venv venv
+venv\Scripts\activate
 ```
 
-### 3. Установка зависимостей
+### Шаг 3: Установка зависимостей
+
 ```bash
 pip install -r requirements.txt
 ```
 
-### 4. Настройка базы данных PostgreSQL
+Если файла requirements.txt нет, установите зависимости вручную:
 
-Создайте базу данных в PostgreSQL:
+```bash
+pip install django==5.2
+pip install psycopg2-binary
+pip install django-pgtrigger
+pip install django-simple-history
+pip install django-extensions
+```
+
+### Шаг 4: Настройка базы данных PostgreSQL
+
+1. Подключитесь к PostgreSQL:
+```bash
+sudo -u postgres psql
+```
+
+2. Создайте базу данных и пользователей:
 ```sql
-CREATE DATABASE finance_tracker;
-CREATE USER finance_user WITH PASSWORD 'your_password';
-GRANT ALL PRIVILEGES ON DATABASE finance_tracker TO finance_user;
+CREATE DATABASE project_2;
+CREATE USER django_admin WITH PASSWORD '2585';
+CREATE USER django_user WITH PASSWORD '1234';
+
+-- Дайте права администратору
+GRANT ALL PRIVILEGES ON DATABASE project_2 TO django_admin;
+
+-- Дайте права обычному пользователю
+GRANT CONNECT ON DATABASE project_2 TO django_user;
 ```
 
-Обновите настройки подключения в `settings.py`:
-```python
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'finance_tracker',
-        'USER': 'finance_user',
-        'PASSWORD': 'your_password',
-        'HOST': 'localhost',
-        'PORT': '5432',
-    }
-}
-```
+### Шаг 5: Настройка проекта
 
-### 5. Применение миграций
+1. Проверьте настройки в `settings.py`:
+   - Убедитесь, что `DEBUG = True` для разработки
+   - Проверьте настройки базы данных
+   - Убедитесь, что `ALLOWED_HOSTS` содержит нужные домены
+
+2. Примените миграции:
 ```bash
 python manage.py makemigrations
 python manage.py migrate
 ```
 
-### 6. Создание суперпользователя
+### Шаг 6: Создание суперпользователя
+
 ```bash
 python manage.py createsuperuser
 ```
-Следуйте инструкциям для создания администратора системы.
+Следуйте инструкциям для создания административной учетной записи.
 
-### 7. Создание материализованного представления
+### Шаг 7: Запуск сервера разработки
 
-Выполните SQL-запрос в базе данных:
-```sql
-CREATE MATERIALIZED VIEW vw_user_transactions AS
-SELECT 
-    t.id as transaction_id,
-    c.number as card_number,
-    t.amount as amount,
-    t.dir as amount_direction,
-    t.created_at as created_at,
-    cat.name as category_name
-FROM main_transactions t
-JOIN main_balance b ON t.bal_id = b.id
-JOIN main_card c ON c.bal_id = b.id
-JOIN main_category cat ON t.category_id = cat.id
-ORDER BY t.created_at DESC;
-```
-
-### 8. Запуск сервера разработки
 ```bash
 python manage.py runserver
 ```
 
-Приложение будет доступно по адресу: http://localhost:8000
+Приложение будет доступно по адресу: http://127.0.0.1:8000/
 
+### Шаг 8: Создание тестовых данных (опционально)
+
+Для создания начальных категорий транзакций выполните:
+```bash
+python manage.py shell
+```
+
+```python
+from main.models import Category
+
+categories = [
+    'Продукты', 'Транспорт', 'Развлечения', 'Одежда', 
+    'Жилье', 'Здоровье', 'Образование', 'Рестораны'
+]
+
+for cat in categories:
+    Category.objects.get_or_create(name=cat)
+```
+
+## Дополнительная информация
+### Важные особенности
+
+1. **Триггеры базы данных**: Автоматическое обновление баланса при операциях с транзакциями
+2. **История изменений**: Все изменения в моделях сохраняются для аудита
+3. **Ролевая модель базы данных**: Разделение прав доступа через разных пользователей PostgreSQL
+4. **Автогенерация данных**: Карты и CVV коды генерируются автоматически
+
+### Устранение неполадок
+
+Если возникают проблемы с подключением к базе данных:
+1. Проверьте, запущен ли сервер PostgreSQL: `sudo systemctl status postgresql`
+2. Убедитесь, что пользователи созданы с правильными паролями
+3. Проверьте права доступа к базе данных
+
+Для сброса базы данных:
+```bash
+python manage.py flush
+python manage.py migrate
+```
+
+### Лицензия
+Проект разработан для учебных целей.
