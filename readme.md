@@ -1,30 +1,4 @@
 Инструкция для Mac/Linux:
-
-1. Клонируйте репозиторий
-git clone https://github.com/shaurmyau/project_django.git
-
-2. Создайте и активируйте виртуальное окружение
-python -m venv venv
-source venv/bin/activate
-
-3. Установите зависимости
-pip install -r requirements.txt
-
-4.Создайте суперпользователя
-python manage.py createsuperuser
-
-5. Примените миграции
-python manage.py makemigrations
-python manage.py migrate
-
-6. Создайте в БД пользователей django_admin и django_user
-django_admin - все привелегии на таблицы в схеме
-django_user - select и insert на таблицы в схеме, дополнительный delete на таблицу сессий и update и delete на таблицу бюджетов
-
-7. Запустите сервер
-python manage.py runserver
-
-
 # Finance Tracker - Система управления финансами
 
 Finance Tracker - это веб-приложение для управления личными финансами, разработанное на Django. Система позволяет пользователям отслеживать свои банковские карты, балансы, транзакции и бюджеты в реальном времени. Приложение включает автоматическое обновление балансов через триггеры базы данных, историю изменений всех операций и визуализацию статистики расходов.
