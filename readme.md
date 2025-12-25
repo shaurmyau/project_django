@@ -2,7 +2,6 @@
 
 1. Клонируйте репозиторий
 git clone https://github.com/ваш-username/project_study_hub.git
-cd project_study_hub
 
 2. Создайте и активируйте виртуальное окружение
 python -m venv venv
