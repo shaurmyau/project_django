@@ -1,7 +1,7 @@
 Инструкция для Mac/Linux:
 
 1. Клонируйте репозиторий
-git clone https://github.com/ваш-username/project_django.git
+git clone https://github.com/shaurmyau/project_django.git
 
 2. Создайте и активируйте виртуальное окружение
 python -m venv venv
