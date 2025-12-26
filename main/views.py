@@ -162,7 +162,7 @@ def register_view(request):
             user = form.save()
             # Автоматический вход после регистрации
             login(request, user)
-            return redirect('account')
+            return redirect('news-list')
     else:
         # Показ пустой формы для GET-запроса
         form = CustomUserCreationForm()
@@ -181,7 +181,7 @@ def login_view(request):
         if user is not None:
             # Успешная аутентификация - вход в систему
             login(request, user)
-            return redirect('account')
+            return redirect('news-list')
         else:
             # Ошибка аутентификации
             messages.error(request, 'Неправильный логин или пароль')
