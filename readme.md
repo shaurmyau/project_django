@@ -141,7 +141,3 @@ python manage.py runserver
 ### Управление бюджетами
 ![Управление транзакциями](screenshots/budget.png)
 *Управление бюджетами*
-
-### Новости
-![Управление транзакциями](screenshots/news.png)
-*Новости*
